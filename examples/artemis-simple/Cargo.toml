@@ -1,0 +1,19 @@
+[package]
+name = "artemis-simple"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aori = { git = "https://github.com/aori-io/aori-sdk-rs/", branch = "dev"}
+
+tokio = { version = "1", features = ["full"] }
+eyre = "0.6"
+serde_json = "1.0"
+# Additional dependencies you might need
+dotenv = "0.15"
+futures = "0.3"
+artemis-core = { git = "https://github.com/paradigmxyz/artemis", branch = "main" }
+serde = "1.0.189"
+async-trait = "0.1.64"
+anyhow = "1.0.70"
+tokio-stream = "0.1.14"

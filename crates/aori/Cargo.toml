@@ -1,0 +1,11 @@
+[package]
+name = "aori"
+version = "0.1.2"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/aori-io/aori-sdk-rs"
+description = "The Aori Rust SDK for interacting with Aori's Websocket-based API."
+
+[dependencies]
+aori_types = "0.1.2"
+aori_requests = "0.1.2"

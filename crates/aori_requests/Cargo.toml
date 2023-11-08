@@ -1,0 +1,19 @@
+[package]
+name = "aori_requests"
+version = "0.1.2"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/aori-io/aori-sdk-rs"
+description = "aori_requests, a part of the Aori.io SDK."
+
+[dependencies]
+alloy-primitives = "0.4.2" 
+alloy-sol-types = "0.4.2" 
+aori_types = "0.1.2"
+dotenv = "0.15.0"
+ethers = { version = "2.0.10", features = ["ws", "rustls", "abigen"] }
+eyre = "0.6.0"
+serde_json = "1.0.0"
+tokio = { version = "1.25.0", features = ["full"] }
+websockets = "0.3.0"
+chrono = "0.4.31"

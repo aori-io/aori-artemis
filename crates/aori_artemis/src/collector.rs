@@ -7,8 +7,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::{mpsc, Mutex};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use websockets::Frame;
-
+use tokio_stream::StreamExt;
 pub struct AoriCollector {
     provider: Arc<Mutex<AoriProvider>>,
 }
@@ -22,34 +21,40 @@ impl AoriCollector {
 #[async_trait]
 impl Collector<AoriEvent> for AoriCollector {
     async fn get_event_stream(&self) -> Result<CollectorStream<'_, AoriEvent>> {
-        let mut provider = self.provider.lock().await;
-        provider
+        let provider = Arc::clone(&self.provider);
+        let mut locked_provider = provider.lock().await;
+        locked_provider
             .subscribe_orderbook()
             .await
-            .expect("Failed to subscribe to orderbook");
+            .map_err(|_| anyhow::anyhow!("Failed to subscribe orderbook."))?;
 
         let (tx, rx) = mpsc::unbounded_channel();
 
         // Spawning a task to manage the responses
         tokio::spawn({
-            let provider = Arc::clone(&self.provider);
+            let provider = Arc::clone(&provider);
             let tx = tx.clone();
             async move {
-                loop {
-                    let mut provider = provider.lock().await;
-                    match provider.feed_conn.receive().await {
-                        Ok(response) => {
-                            if let Frame::Text { payload, .. } = response {
-                                // Process the payload here and send the events to the channel
-                                // This logic might depend on your specific needs
-                                if let Err(e) = process_payload(payload, &tx).await {
-                                    eprintln!("Error processing payload: {}", e);
-                                }
+                while let Some(result) = provider.lock().await.request_conn.next().await {
+                    match result {
+                        Ok(message) => {
+                            let message = message.into_text().expect("msg");
+                            if let Err(e) = process_payload(message, &tx).await {
+                                eprintln!("Error processing payload {}", e);
                             }
                         }
-                        Err(e) => {
-                            eprintln!("Error receiving response: {}", e);
+                        Err(e) => eprintln!("Error receiving message: {}", e),
+                    }
+                }
+                while let Some(result) = provider.lock().await.feed_conn.next().await {
+                    match result {
+                        Ok(message) => {
+                            let message = message.into_text().expect("msg");
+                            if let Err(e) = process_payload(message, &tx).await {
+                                eprintln!("Error processing payload {}", e);
+                            }
                         }
+                        Err(e) => eprintln!("Error receiving message: {}", e),
                     }
                 }
             }
@@ -65,7 +70,7 @@ impl Collector<AoriEvent> for AoriCollector {
 async fn process_payload(payload: String, tx: &UnboundedSender<AoriEvent>) -> Result<()> {
     if payload.contains("Subscribed to orderbook updates") {
         tx.send(AoriEvent::Subscribed(
-            "[AORI.IO] Subscribed to orderbook updates".to_string(),
+            "if you're reading this you have subscribed to aori thx".to_string(),
         ))
         .expect("Error sending subscription confirmation");
     } else {

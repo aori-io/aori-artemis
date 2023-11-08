@@ -25,8 +25,8 @@ pub fn create_ping_payload(last_id: &Arc<Mutex<u64>>) -> Value {
 
 pub fn create_auth_wallet_payload(
     last_id: &Arc<Mutex<u64>>,
-    wallet_addr: &Arc<str>,
-    wallet_sig: &Arc<str>,
+    wallet_addr: &Arc<&str>,
+    wallet_sig: &Arc<&str>,
 ) -> Value {
     let mut id = last_id.lock().unwrap();
     *id += 1;
@@ -184,8 +184,8 @@ pub fn create_subscribe_orderbook_payload(last_id: &Arc<Mutex<u64>>) -> Value {
 
 pub fn create_account_orders_payload(
     last_id: &Arc<Mutex<u64>>,
-    wallet_addr: &Arc<str>,
-    wallet_sig: &Arc<str>,
+    wallet_addr: &Arc<&str>,
+    wallet_sig: &Arc<&str>,
 ) -> Value {
     let mut id = last_id.lock().unwrap();
     *id += 1;

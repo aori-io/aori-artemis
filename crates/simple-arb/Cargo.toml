@@ -1,0 +1,19 @@
+[package]
+name = "simple-arb"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde_json = "1.0.0"
+aori_types = { path = "../aori_types" }
+aori_requests = { path = "../aori_requests" }
+## aori = { git = "https://github.com/aori-io/aori-sdk-rs/", branch = "main"}
+artemis-core = { git = "https://github.com/paradigmxyz/artemis", branch = "main" }
+ethers = { version = "2.0.10", features = ["ws", "rustls", "abigen"] }
+async-trait = "0.1.74"
+anyhow = "1.0.75"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tokio = { version = "1", features = ["full"] }

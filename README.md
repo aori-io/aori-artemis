@@ -32,7 +32,7 @@ To install the SDK, add the following to the Cargo.toml:
 
 ```bash
 [dependencies]
-aori = "0.1.2"
+aori = { git = "https://github.com/aori-io/aori-sdk-rs/", branch = "main"}
 ```
 
 ## Initialization

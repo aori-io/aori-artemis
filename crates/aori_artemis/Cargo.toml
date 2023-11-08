@@ -8,11 +8,13 @@ description = "aori_artemis, a part of the Aori.io SDK."
 
 [dependencies] 
 anyhow = "1.0.70"
-aori_requests = "0.1.2"
-aori_types = "0.1.2"
+aori_requests = { path = "../aori_requests" }
+## aori_types = "0.1.2"
+aori_types = { path = "../aori_types" }
 artemis-core = { git = "https://github.com/paradigmxyz/artemis", branch = "main" }
 async-trait = "0.1.74"
 serde_json = "1.0.0"
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1.14"
 websockets = "0.3.0"
+tracing = "0.1.37"

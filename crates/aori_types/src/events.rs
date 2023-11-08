@@ -109,17 +109,20 @@ impl OrderParameters {
 
     pub fn to_order_components(self) -> seaport::OrderComponents {
         seaport::OrderComponents {
-            offerer: Address::parse_checksummed(&self.offerer, None).unwrap(),
-            zone: Address::parse_checksummed(&self.zone, None).unwrap(),
+            // offerer: Address::parse_checksummed(&self.offerer, None).unwrap(),
+            offerer: self.offerer.parse::<Address>().unwrap(),
+            zone: self.zone.parse::<Address>().unwrap(),
+            // zone: Address::parse_checksummed(&self.zone, None).unwrap(),
             offer: self
                 .offer
                 .iter()
                 .map(|item| seaport::OfferItem {
                     itemType: item.item_type,
-                    token: Address::parse_checksummed(&item.token, None).unwrap(),
+                    token: item.token.parse::<Address>().unwrap(),
+                    // token: Address::parse_checksummed(&item.token, None).unwrap(),
                     identifierOrCriteria: U256::from(0),
-                    startAmount: U256::from(item.start_amount.parse::<u64>().unwrap()),
-                    endAmount: U256::from(item.end_amount.parse::<u64>().unwrap()),
+                    startAmount: U256::from(item.start_amount.parse::<U256>().unwrap()),
+                    endAmount: U256::from(item.end_amount.parse::<U256>().unwrap()),
                 })
                 .collect(),
             consideration: self
@@ -127,18 +130,20 @@ impl OrderParameters {
                 .iter()
                 .map(|item| seaport::ConsiderationItem {
                     itemType: item.item_type,
-                    token: Address::parse_checksummed(&item.token, None).unwrap(),
+                    // token: Address::parse_checksummed(&item.token, None).unwrap(),
+                    token: item.token.parse::<Address>().unwrap(),
                     identifierOrCriteria: U256::from(0),
                     startAmount: U256::from(item.start_amount.parse::<u64>().unwrap()),
                     endAmount: U256::from(item.end_amount.parse::<u64>().unwrap()),
-                    recipient: Address::parse_checksummed(&item.recipient, None).unwrap(),
+                    recipient: item.recipient.parse::<Address>().unwrap(),
+                    // recipient: Address::parse_checksummed(&item.recipient, None).unwrap(),
                 })
                 .collect(),
             orderType: self.order_type,
-            startTime: U256::from(self.start_time.parse::<u64>().unwrap()),
-            endTime: U256::from(self.end_time.parse::<u64>().unwrap()),
+            startTime: U256::from(self.start_time.parse::<U256>().unwrap()),
+            endTime: U256::from(self.end_time.parse::<U256>().unwrap()),
             zoneHash: DEFAULT_ZONE_HASH.into(),
-            salt: U256::from(self.salt.parse::<u64>().unwrap()),
+            salt: U256::from_str_radix(self.salt.trim_start_matches("0x"), 16).unwrap(),
             conduitKey: DEFAULT_CONDUIT_KEY.into(),
             counter: U256::from(0), // @dev: to-do: query seaport for counter here
         }
@@ -224,19 +229,13 @@ pub enum AoriEvent {
     Subscribed(String),
 
     #[serde(rename = "OrderCancelled")]
-    OrderCancelled(String),
+    OrderCancelled(Box<OrderCancelledData>),
 
     #[serde(rename = "OrderCreated")]
     OrderCreated(Box<OrderCreatedData>),
 
     #[serde(rename = "OrderTaken")]
-    OrderTaken(String),
-}
-
-// Defining specific data structures for each event type
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
-pub struct OrderCancelledData {
-    pub data: String,
+    OrderTaken(Box<OrderTakenData>),
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
@@ -247,12 +246,36 @@ pub struct OrderCreatedData {
     #[serde(rename = "inputToken")]
     pub input_token: String,
     #[serde(rename = "outputToken")]
-    pub ouptut_token: String,
+    pub output_token: String,
     #[serde(rename = "inputAmount")]
     pub input_amount: u64,
     #[serde(rename = "outputAmount")]
     pub output_amount: u64,
+    #[serde(rename = "chainId")]
+    pub chain_id: i64,
+    pub active: bool,
+    #[serde(rename = "createdAt")]
+    pub created_at: u64,
+    #[serde(rename = "lastUpdatedAt")]
+    pub last_updated_at: u64,
+    #[serde(rename = "isPublic")]
+    pub is_public: bool,
     pub rate: Option<f64>,
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
+pub struct OrderCancelledData {
+    pub order: OrderCreationData,
+    #[serde(rename = "orderHash")]
+    pub order_hash: String,
+    #[serde(rename = "inputToken")]
+    pub input_token: String,
+    #[serde(rename = "outputToken")]
+    pub output_token: String,
+    #[serde(rename = "inputAmount")]
+    pub input_amount: u64,
+    #[serde(rename = "outputAmount")]
+    pub output_amount: u64,
     #[serde(rename = "chainId")]
     pub chain_id: i64,
     pub active: bool,
@@ -263,9 +286,31 @@ pub struct OrderCreatedData {
     #[serde(rename = "isPublic")]
     pub is_public: bool,
 }
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 pub struct OrderTakenData {
-    pub data: String,
+    pub order: OrderCreationData,
+    #[serde(rename = "orderHash")]
+    pub order_hash: String,
+    #[serde(rename = "inputToken")]
+    pub input_token: String,
+    #[serde(rename = "outputToken")]
+    pub output_token: String,
+    #[serde(rename = "inputAmount")]
+    pub input_amount: u64,
+    #[serde(rename = "outputAmount")]
+    pub output_amount: u64,
+    #[serde(rename = "chainId")]
+    pub chain_id: i64,
+    pub active: bool,
+    #[serde(rename = "createdAt")]
+    pub created_at: u64,
+    #[serde(rename = "lastUpdatedAt")]
+    pub last_updated_at: u64,
+    #[serde(rename = "isPublic")]
+    pub is_public: bool,
+    #[serde(rename = "takenAt")]
+    pub taken_at: u64,
 }
 
 // Implementing Deserialize trait manually for AoriEvent
@@ -288,9 +333,9 @@ impl<'de> Deserialize<'de> for AoriEvent {
                 Ok(AoriEvent::Subscribed("Subscribed.".to_string()))
             }
             "OrderCancelled" => {
-                let data: String = serde_json::from_value(map.remove("data").unwrap())
+                let data: OrderCancelledData = serde_json::from_value(map.remove("data").unwrap())
                     .map_err(serde::de::Error::custom)?;
-                Ok(AoriEvent::OrderCancelled(data))
+                Ok(AoriEvent::OrderCancelled(Box::new(data)))
             }
             "OrderCreated" => {
                 let data: OrderCreatedData = serde_json::from_value(map.remove("data").unwrap())
@@ -298,9 +343,9 @@ impl<'de> Deserialize<'de> for AoriEvent {
                 Ok(AoriEvent::OrderCreated(Box::new(data)))
             }
             "OrderTaken" => {
-                let data: String = serde_json::from_value(map.remove("data").unwrap())
+                let data: OrderTakenData = serde_json::from_value(map.remove("data").unwrap())
                     .map_err(serde::de::Error::custom)?;
-                Ok(AoriEvent::OrderTaken(data))
+                Ok(AoriEvent::OrderTaken(Box::new(data)))
             }
             _ => Err(serde::de::Error::unknown_variant(
                 type_,

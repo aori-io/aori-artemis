@@ -120,9 +120,11 @@ impl Strategy<Event, Action> for SimpleArb {
                                 .orderbook_entries
                                 .iter()
                                 .filter(|entry| {
+                                    let price_ratio_new_order = order_data.output_amount as f64 / order_data.input_amount as f64;
+                                    let price_ratio_existing_order = entry.input_amount as f64 / entry.output_amount as f64;
                                     entry.input_token == order_data.output_token
                                         && entry.output_token == order_data.input_token
-                                        && entry.input_amount > order_data.output_amount
+                                        && price_ratio_existing_order > price_ratio_new_order
                                 })
                                 .collect::<Vec<_>>();
 
